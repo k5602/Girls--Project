@@ -1,0 +1,144 @@
+{
+  "questions": [
+    {
+      "question": "Which data structure uses LIFO (Last In, First Out) principle?",
+      "options": ["Stack", "Queue", "Linked List", "Tree"],
+      "correct_answer": "Stack",
+      "difficulty": "easy",
+      "category": "Data Structures"
+    },
+    {
+      "question": "What is the time complexity of binary search?",
+      "options": ["O(log n)", "O(n)", "O(n log n)", "O(n²)"],
+      "correct_answer": "O(log n)",
+      "difficulty": "medium",
+      "category": "Data Structures"
+    },
+    {
+      "question": "Which of the following is NOT a linear data structure?",
+      "options": ["Tree", "Array", "Stack", "Queue"],
+      "correct_answer": "Tree",
+      "difficulty": "easy",
+      "category": "Data Structures"
+    },
+    {
+      "question": "What is the worst-case time complexity of quicksort?",
+      "options": ["O(n²)", "O(n log n)", "O(n)", "O(log n)"],
+      "correct_answer": "O(n²)",
+      "difficulty": "hard",
+      "category": "Data Structures"
+    },
+    {
+      "question": "Which data structure is best for implementing a priority queue?",
+      "options": ["Heap", "Stack", "Linked List", "Array"],
+      "correct_answer": "Heap",
+      "difficulty": "medium",
+      "category": "Data Structures"
+    },
+    {
+      "question": "What does the 'self' keyword represent in Python?",
+      "options": ["Current instance of the class", "Parent class", "Module name", "Function name"],
+      "correct_answer": "Current instance of the class",
+      "difficulty": "easy",
+      "category": "Python Programming"
+    },
+    {
+      "question": "Which of the following is NOT a Python data type?",
+      "options": ["Char", "List", "Tuple", "Dictionary"],
+      "correct_answer": "Char",
+      "difficulty": "easy",
+      "category": "Python Programming"
+    },
+    {
+      "question": "What is the output of: [x*2 for x in range(3)]?",
+      "options": ["[0, 2, 4]", "[2, 4, 6]", "[0, 1, 2]", "[1, 2, 3]"],
+      "correct_answer": "[0, 2, 4]",
+      "difficulty": "medium",
+      "category": "Python Programming"
+    },
+    {
+      "question": "Which function is used to get the length of a list in Python?",
+      "options": ["len()", "size()", "length()", "count()"],
+      "correct_answer": "len()",
+      "difficulty": "easy",
+      "category": "Python Programming"
+    },
+    {
+      "question": "What does the 'yield' keyword do in Python?",
+      "options": ["Creates a generator function", "Terminates a loop", "Returns multiple values", "Raises an exception"],
+      "correct_answer": "Creates a generator function",
+      "difficulty": "hard",
+      "category": "Python Programming"
+    },
+    {
+      "question": "Who is considered the father of Artificial Intelligence?",
+      "options": ["Alan Turing", "John McCarthy", "Marvin Minsky", "Herbert Simon"],
+      "correct_answer": "John McCarthy",
+      "difficulty": "medium",
+      "category": "Introduction to AI"
+    },
+    {
+      "question": "Which of these is NOT a type of machine learning?",
+      "options": ["Automated learning", "Supervised learning", "Unsupervised learning", "Reinforcement learning"],
+      "correct_answer": "Automated learning",
+      "difficulty": "easy",
+      "category": "Introduction to AI"
+    },
+    {
+      "question": "What is the Turing Test used to evaluate?",
+      "options": ["A machine's ability to exhibit human-like intelligence", "Processing speed", "Memory capacity", "Network efficiency"],
+      "correct_answer": "A machine's ability to exhibit human-like intelligence",
+      "difficulty": "medium",
+      "category": "Introduction to AI"
+    },
+    {
+      "question": "Which algorithm is commonly used for finding the shortest path in a graph?",
+      "options": ["Dijkstra's algorithm", "Bubble sort", "Binary search", "Quick sort"],
+      "correct_answer": "Dijkstra's algorithm",
+      "difficulty": "hard",
+      "category": "Introduction to AI"
+    },
+    {
+      "question": "What does CNN stand for in the context of AI?",
+      "options": ["Convolutional Neural Network", "Computational Neural Network", "Cognitive Neural Network", "Continuous Neural Network"],
+      "correct_answer": "Convolutional Neural Network",
+      "difficulty": "medium",
+      "category": "Introduction to AI"
+    },
+    {
+      "question": "What is the derivative of f(x) = x²?",
+      "options": ["f'(x) = 2x", "f'(x) = x", "f'(x) = 2", "f'(x) = x²"],
+      "correct_answer": "f'(x) = 2x",
+      "difficulty": "easy",
+      "category": "Calculus"
+    },
+    {
+      "question": "What is the integral of f(x) = 2x?",
+      "options": ["F(x) = x² + C", "F(x) = 2x² + C", "F(x) = x + C", "F(x) = 2 + C"],
+      "correct_answer": "F(x) = x² + C",
+      "difficulty": "easy",
+      "category": "Calculus"
+    },
+    {
+      "question": "What is the limit of (sin x)/x as x approaches 0?",
+      "options": ["1", "0", "Infinity", "Undefined"],
+      "correct_answer": "1",
+      "difficulty": "medium",
+      "category": "Calculus"
+    },
+    {
+      "question": "Which of the following is the chain rule for derivatives?",
+      "options": ["d/dx[f(g(x))] = f'(g(x)) · g'(x)", "d/dx[f(g(x))] = f'(x) · g'(x)", "d/dx[f(g(x))] = f(x) · g(x)", "d/dx[f(g(x))] = f'(x)/g'(x)"],
+      "correct_answer": "d/dx[f(g(x))] = f'(g(x)) · g'(x)",
+      "difficulty": "hard",
+      "category": "Calculus"
+    },
+    {
+      "question": "What is the derivative of sin(x)?",
+      "options": ["cos(x)", "-sin(x)", "tan(x)", "-cos(x)"],
+      "correct_answer": "cos(x)",
+      "difficulty": "medium",
+      "category": "Calculus"
+    }
+  ]
+}
