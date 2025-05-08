@@ -97,4 +97,4 @@ This project is open-source and available for educational purposes.
 - All contributors to the project
 ## Dedication
 
-This project is dedicated to the rose of my life, my beautiful light.
+This project is dedicated to the rose of my life, my beautiful light Sara.
