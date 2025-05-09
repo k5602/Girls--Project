@@ -2,15 +2,11 @@ import customtkinter as ctk
 import tkinter as tk
 from typing import Callable, List, Dict, Any, Optional, Tuple
 import time
-try:
-    from PIL import Image, ImageTk
-except ImportError:
-    print("PIL not found. Please install it using: pip install pillow")
-    Image = None
-    ImageTk = None
+from PIL import Image, ImageTk
 import os
 from quiz_logic import QuizLogic
 from high_scores import HighScores
+from localization import Localization
 
 
 class QuizApp:
@@ -58,6 +54,9 @@ class QuizApp:
         self.quiz_logic = QuizLogic()
         self.high_scores = HighScores()
 
+        # Initialize localization system
+        self.localization = Localization("en")  # Default to English
+
         # Initialize variables
         self.timer_id = None
         self.time_left = 20  # Increased time
@@ -67,7 +66,16 @@ class QuizApp:
         self.longest_streak = 0
         self.achievements = {}
         self.theme_var = ctk.StringVar(value="system")
+        self.language_var = ctk.StringVar(value="en")
+
+        # Scaling factors for responsive design
         self.font_scale = 1.0  # Default font scale
+        self.ui_scale = 1.0  # Scale for UI elements (padding, margins)
+        self.button_width_scale = 1.0  # Scale for button widths
+        self.button_height_scale = 1.0  # Scale for button heights
+        self.window_width = 900  # Default window width
+        self.window_height = 700  # Default window height
+        self._last_size = (900, 700)  # Track window size changes
 
         # Create main container that fills the window
         self.container = ctk.CTkFrame(self.root)
@@ -106,21 +114,73 @@ class QuizApp:
         self.content_frame.grid_columnconfigure(0, weight=1)
 
     def on_window_resize(self, event) -> None:
-        """Handle window resize events to ensure responsive layout."""
+        """
+        Handle window resize events to ensure responsive layout.
+        Adjusts font sizes, padding, and layout based on window dimensions.
+        """
         # Only process events from the root window
         if event.widget == self.root:
             width = event.width
-            # Adjust font sizes or layout based on window width
+            height = event.height
+
+            # Store current dimensions for responsive calculations
+            self.window_width = width
+            self.window_height = height
+
+            # Adjust font sizes based on window width
             if width < 500:
-                self.font_scale = 0.8
+                self.font_scale = 0.75
             elif width < 700:
-                self.font_scale = 0.9
+                self.font_scale = 0.85
+            elif width < 900:
+                self.font_scale = 0.95
             else:
                 self.font_scale = 1.0
 
+            # Adjust padding and spacing based on window size
+            if width < 600 or height < 500:
+                self.ui_scale = 0.7
+            elif width < 800 or height < 600:
+                self.ui_scale = 0.85
+            else:
+                self.ui_scale = 1.0
+
+            # Adjust button sizes for smaller screens
+            if width < 500:
+                self.button_width_scale = 0.7
+                self.button_height_scale = 0.8
+            elif width < 700:
+                self.button_width_scale = 0.85
+                self.button_height_scale = 0.9
+            else:
+                self.button_width_scale = 1.0
+                self.button_height_scale = 1.0
+
+            # Refresh current screen if needed for major size changes
+            # This helps ensure proper layout after significant resizing
+            if hasattr(self, '_last_size') and (
+                abs(self._last_size[0] - width) > 200 or
+                abs(self._last_size[1] - height) > 200
+            ):
+                # Store current screen before refreshing
+                current_screen = getattr(self, '_current_screen', 'welcome')
+
+                # Refresh the current screen
+                if current_screen == 'welcome':
+                    self.root.after(100, self.show_welcome_screen)
+                elif current_screen == 'question':
+                    self.root.after(100, self.show_question_screen)
+                elif current_screen == 'results':
+                    self.root.after(100, self.show_results_screen)
+                elif current_screen == 'high_scores':
+                    self.root.after(100, self.show_high_scores_screen)
+
+            # Store current size for comparison on next resize
+            self._last_size = (width, height)
+
     def get_font(self, size: int, weight: str = "normal", slant: str = "roman") -> ctk.CTkFont:
         """
-        Get a scaled font based on window size.
+        Get a scaled font based on window size with robust error handling.
 
         Args:
             size: Base font size
@@ -130,19 +190,37 @@ class QuizApp:
         Returns:
             Scaled CTkFont object
         """
-        # Convert string parameters to valid values for CTkFont
-        weight_val = "bold" if weight == "bold" else "normal"
-        slant_val = "italic" if slant == "italic" else "roman"
+        try:
+            # Convert string parameters to valid values for CTkFont
+            weight_val = "bold" if weight == "bold" else "normal"
+            slant_val = "italic" if slant == "italic" else "roman"
 
-        # Scale the font size based on window size
-        scaled_size = int(size * getattr(self, 'font_scale', 1.0))
+            # Scale the font size based on window size
+            scaled_size = int(size * getattr(self, 'font_scale', 1.0))
 
-        # Create and return a new font
-        return ctk.CTkFont(size=scaled_size, weight=weight_val, slant=slant_val)
+            # Create and return a new font
+            return ctk.CTkFont(size=scaled_size, weight=weight_val, slant=slant_val)
+        except Exception as e:
+            # Log the error
+            print(f"Error creating font: {e}")
+
+            # Fallback to a default font
+            try:
+                return ctk.CTkFont(size=size)
+            except Exception:
+                # If all else fails, return None and let the widget use its default font
+                print("Critical font creation error, using system default")
+                return None
 
     def show_welcome_screen(self) -> None:
         """Display the welcome screen with options to start quiz or view high scores."""
         self.clear_frame()
+
+        # Track current screen for language switching
+        self._current_screen = 'welcome'
+
+        # Check if we need RTL layout
+        is_rtl = self.localization.is_rtl()
 
         welcome_container = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         welcome_container.pack(fill=tk.BOTH, expand=True)
@@ -153,7 +231,7 @@ class QuizApp:
 
         title_label = ctk.CTkLabel(
             title_frame,
-            text="Quiz Master",
+            text=self.get_text("app_title"),
             font=self.get_font(38, "bold"),
             text_color=self.colors["accent"]
         )
@@ -161,7 +239,7 @@ class QuizApp:
 
         subtitle_label = ctk.CTkLabel(
             title_frame,
-            text="Test your knowledge and compete for high scores!",
+            text=self.get_text("welcome_subtitle"),
             font=self.get_font(16, slant="italic")
         )
         subtitle_label.pack(pady=(0, 30))
@@ -177,10 +255,10 @@ class QuizApp:
         # Number of Questions
         questions_label = ctk.CTkLabel(
             options_frame,
-            text="Number of Questions:",
+            text=self.get_text("num_questions"),
             font=self.get_font(16)
         )
-        questions_label.grid(row=0, column=0, sticky="w", padx=20, pady=(20, 10))
+        questions_label.grid(row=0, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=(20, 10))
 
         questions_values = ["5", "10", "15", "20"]
         questions_var = ctk.StringVar(value="10")
@@ -192,17 +270,20 @@ class QuizApp:
             width=150,
             dynamic_resizing=False
         )
-        questions_dropdown.grid(row=0, column=1, sticky="e", padx=20, pady=(20, 10))
+        questions_dropdown.grid(row=0, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=(20, 10))
 
         # Difficulty selection
         difficulty_label = ctk.CTkLabel(
             options_frame,
-            text="Difficulty Level:",
+            text=self.get_text("difficulty_level"),
             font=self.get_font(16)
         )
-        difficulty_label.grid(row=1, column=0, sticky="w", padx=20, pady=10)
+        difficulty_label.grid(row=1, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=10)
 
-        difficulties = ["all"] + self.quiz_logic.get_available_difficulties()
+        # Translate difficulty levels
+        raw_difficulties = ["all"] + self.quiz_logic.get_available_difficulties()
+        difficulties = [self.get_text(d) for d in raw_difficulties]
+        difficulty_map = dict(zip(difficulties, raw_difficulties))
         difficulty_var = ctk.StringVar(value=difficulties[0])
 
         difficulty_dropdown = ctk.CTkOptionMenu(
@@ -212,15 +293,15 @@ class QuizApp:
             width=150,
             dynamic_resizing=False
         )
-        difficulty_dropdown.grid(row=1, column=1, sticky="e", padx=20, pady=10)
+        difficulty_dropdown.grid(row=1, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=10)
 
         # Category selection
         category_label = ctk.CTkLabel(
             options_frame,
-            text="Category:",
+            text=self.get_text("category"),
             font=self.get_font(16)
         )
-        category_label.grid(row=2, column=0, sticky="w", padx=20, pady=10)
+        category_label.grid(row=2, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=10)
 
         categories = ["all"] + self.quiz_logic.get_available_categories()
         category_var = ctk.StringVar(value=categories[0])
@@ -232,15 +313,15 @@ class QuizApp:
             width=150,
             dynamic_resizing=False
         )
-        category_dropdown.grid(row=2, column=1, sticky="e", padx=20, pady=10)
+        category_dropdown.grid(row=2, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=10)
 
         # Timer duration
         timer_label = ctk.CTkLabel(
             options_frame,
-            text="Timer (seconds):",
+            text=self.get_text("timer_seconds"),
             font=self.get_font(16)
         )
-        timer_label.grid(row=3, column=0, sticky="w", padx=20, pady=10)
+        timer_label.grid(row=3, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=10)
 
         timer_values = ["10", "15", "20", "30"]
         timer_var = ctk.StringVar(value="20")
@@ -252,29 +333,72 @@ class QuizApp:
             width=150,
             dynamic_resizing=False
         )
-        timer_dropdown.grid(row=3, column=1, sticky="e", padx=20, pady=10)
+        timer_dropdown.grid(row=3, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=10)
 
         # Theme selection
         theme_label = ctk.CTkLabel(
             options_frame,
-            text="Theme:",
-            font=ctk.CTkFont(size=16)
+            text=self.get_text("theme"),
+            font=self.get_font(16)
         )
-        theme_label.grid(row=4, column=0, sticky="w", padx=20, pady=(10, 20))
+        theme_label.grid(row=4, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=10)
 
-        # Create dropdown for theme selection instead of segmented button
-        theme_values = ["Light", "Dark", "System"]
+        # Create dropdown for theme selection
+        theme_values = [self.get_text("light"), self.get_text("dark"), self.get_text("system")]
+        theme_map = {
+            self.get_text("light"): "Light",
+            self.get_text("dark"): "Dark",
+            self.get_text("system"): "System"
+        }
+
+        def on_theme_change(value):
+            self.change_theme(theme_map[value])
+
         theme_dropdown = ctk.CTkOptionMenu(
             options_frame,
             values=theme_values,
-            command=self.change_theme,
+            command=on_theme_change,
             width=150,
             dynamic_resizing=False
         )
-        theme_dropdown.grid(row=4, column=1, sticky="e", padx=20, pady=(10, 20))
+        theme_dropdown.grid(row=4, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=10)
 
         # Set default theme
-        theme_dropdown.set("System")
+        theme_dropdown.set(self.get_text("system"))
+
+        # Language selection
+        language_label = ctk.CTkLabel(
+            options_frame,
+            text=self.get_text("language"),
+            font=self.get_font(16)
+        )
+        language_label.grid(row=5, column=0, sticky="w" if not is_rtl else "e", padx=20, pady=(10, 20))
+
+        # Get available languages
+        languages = self.localization.get_available_languages()
+        language_values = list(languages.keys())
+
+        # Create a mapping from display name to language code
+        language_display = [f"{code} - {name}" for code, name in languages.items()]
+        language_map = dict(zip(language_display, language_values))
+
+        def on_language_change(value):
+            lang_code = language_map[value]
+            self.change_language(lang_code)
+
+        language_dropdown = ctk.CTkOptionMenu(
+            options_frame,
+            values=language_display,
+            command=on_language_change,
+            width=150,
+            dynamic_resizing=False
+        )
+        language_dropdown.grid(row=5, column=1, sticky="e" if not is_rtl else "w", padx=20, pady=(10, 20))
+
+        # Set current language
+        current_lang_display = next((disp for disp, code in language_map.items()
+                                    if code == self.language_var.get()), language_display[0])
+        language_dropdown.set(current_lang_display)
 
         # Buttons frame
         buttons_frame = ctk.CTkFrame(welcome_container, fg_color="transparent")
@@ -287,14 +411,15 @@ class QuizApp:
         # Start button with accent color
         start_button = ctk.CTkButton(
             center_frame,
-            text="Start Quiz",
+            text=self.get_text("start_quiz"),
             font=self.get_font(20),
             height=50,
             width=200,
             fg_color=self.colors["accent"],
             hover_color=self.colors["secondary"],
             command=lambda: self.start_quiz(
-                difficulty_var.get(),
+                # Map localized difficulty back to internal value
+                difficulty_map.get(difficulty_var.get(), "all"),
                 category_var.get(),
                 int(questions_var.get()),
                 int(timer_var.get())
@@ -305,7 +430,7 @@ class QuizApp:
         # High scores button
         high_scores_button = ctk.CTkButton(
             center_frame,
-            text="View High Scores",
+            text=self.get_text("view_high_scores"),
             font=self.get_font(16),
             height=40,
             width=200,
@@ -316,7 +441,7 @@ class QuizApp:
         # Achievements button
         achievements_button = ctk.CTkButton(
             center_frame,
-            text="Achievements",
+            text=self.get_text("achievements"),
             font=self.get_font(16),
             height=40,
             width=200,
@@ -333,6 +458,41 @@ class QuizApp:
         """
         theme_map = {"Light": "light", "Dark": "dark", "System": "system"}
         ctk.set_appearance_mode(theme_map[value])
+
+    def change_language(self, value: str) -> None:
+        """
+        Change the application language.
+
+        Args:
+            value: Language code (en, ar)
+        """
+        if self.localization.change_language(value):
+            # Update UI with new language
+            self.language_var.set(value)
+
+            # Refresh the current screen to apply new language
+            current_screen = getattr(self, '_current_screen', 'welcome')
+            if current_screen == 'welcome':
+                self.show_welcome_screen()
+            elif current_screen == 'question':
+                self.show_question_screen()
+            elif current_screen == 'results':
+                self.show_results_screen()
+            elif current_screen == 'high_scores':
+                self.show_high_scores_screen()
+
+    def get_text(self, key: str, **kwargs) -> str:
+        """
+        Get localized text for the given key.
+
+        Args:
+            key: The translation key
+            **kwargs: Format parameters for the translated string
+
+        Returns:
+            Localized text
+        """
+        return self.localization.get_text(key, **kwargs)
 
     def start_quiz(self, difficulty: str, category: str, num_questions: int = 10, timer_duration: int = 20) -> None:
         """
