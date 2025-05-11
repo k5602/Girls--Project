@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from typing import Callable, List, Dict, Any, Optional, Tuple
 import time
+import math
 from PIL import Image, ImageTk
 import os
 from quiz_logic import QuizLogic
@@ -12,6 +13,9 @@ from localization import Localization
 class QuizApp:
     """
     Main application class for the Quiz Game GUI using CustomTkinter.
+    
+    Features enhanced visual feedback with animations for transitions,
+    user interactions, and game events.
     """
 
     def __init__(self, root: ctk.CTk):
@@ -67,6 +71,13 @@ class QuizApp:
         self.achievements = {}
         self.theme_var = ctk.StringVar(value="system")
         self.language_var = ctk.StringVar(value="en")
+        
+        # Animation variables
+        self.animation_speed = 10  # ms between animation frames
+        self.animation_ids = []  # Store animation IDs for cancellation
+        
+        # Ensure animations are cleaned up when the window closes
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # Scaling factors for responsive design
         self.font_scale = 1.0  # Default font scale
@@ -100,19 +111,395 @@ class QuizApp:
         self.show_welcome_screen()
 
     def clear_frame(self) -> None:
-        """Clear all widgets from the content frame."""
-        # Destroy previous content frame
+        """Clear all widgets from the content frame with fade-out animation."""
+        # Cancel any running animations
+        self.cancel_animations()
+        
+        # Create new content frame that will replace the old one
+        new_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        new_frame.grid(row=0, column=0, sticky="nsew")
+        new_frame.grid_rowconfigure(0, weight=1)
+        new_frame.grid_columnconfigure(0, weight=1)
+        
+        # If there's an existing frame, animate the transition
         if hasattr(self, 'content_frame') and self.content_frame is not None:
-            self.content_frame.destroy()
+            # Start with the new frame invisible
+            new_frame.grid_remove()
+            
+            # Fade out old frame
+            self.fade_out_widget(self.content_frame, 
+                                 callback=lambda: self._complete_frame_transition(new_frame))
+        else:
+            # If no previous frame, just make the new one visible
+            new_frame.grid()
+            
+        # Update content frame reference
+        self.content_frame = new_frame
+        
+    def _complete_frame_transition(self, new_frame: ctk.CTkFrame) -> None:
+        """Complete the transition to a new frame after fade-out."""
+        # Show the new frame
+        new_frame.grid()
+        
+        # Fade in the new frame
+        self.fade_in_widget(new_frame)
 
-        # Create new content frame
-        self.content_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.content_frame.grid(row=0, column=0, sticky="nsew")
-
-        # Configure grid
-        self.content_frame.grid_rowconfigure(0, weight=1)
-        self.content_frame.grid_columnconfigure(0, weight=1)
-
+    # Animation utility methods
+    def cancel_animations(self) -> None:
+        """Cancel all running animations."""
+        for anim_id in self.animation_ids:
+            if anim_id:
+                self.root.after_cancel(anim_id)
+        self.animation_ids = []
+        
+    def fade_in_widget(self, widget, duration: int = 500, callback: Optional[Callable] = None) -> None:
+        """
+        Animate a widget fading in.
+        
+        Args:
+            widget: The widget to animate
+            duration: Animation duration in milliseconds
+            callback: Function to call when animation completes
+        """
+        # Ensure the widget exists and is visible
+        if not widget.winfo_exists():
+            if callback:
+                callback()
+            return
+            
+        # Calculate number of steps based on duration and speed
+        steps = max(1, duration // self.animation_speed)
+        alpha_step = 1.0 / steps
+        
+        # Set widget initially transparent
+        widget.configure(fg_color=self._adjust_color_alpha(
+            widget.cget("fg_color") if widget.cget("fg_color") != "transparent" 
+            else self.main_frame.cget("fg_color"), 0))
+        
+        def _fade_step(step, orig_color):
+            if not widget.winfo_exists():
+                return
+            
+            alpha = min(1.0, step * alpha_step)
+            widget.configure(fg_color=self._adjust_color_alpha(orig_color, alpha))
+            
+            if step < steps:
+                anim_id = self.root.after(
+                    self.animation_speed, 
+                    lambda: _fade_step(step + 1, orig_color))
+                self.animation_ids.append(anim_id)
+            elif callback:
+                callback()
+        
+        # Start fade-in animation with the widget's original color
+        orig_color = widget.cget("fg_color") if widget.cget("fg_color") != "transparent" else self.main_frame.cget("fg_color")
+        _fade_step(0, orig_color)
+    
+    def fade_out_widget(self, widget, callback: Optional[Callable] = None, duration: int = 300) -> None:
+        """
+        Animate a widget fading out.
+        
+        Args:
+            widget: The widget to animate
+            callback: Function to call when animation completes
+            duration: Animation duration in milliseconds
+        """
+        if not widget.winfo_exists():
+            if callback:
+                callback()
+            return
+            
+        steps = max(1, duration // self.animation_speed)
+        alpha_step = 1.0 / steps
+        
+        orig_color = widget.cget("fg_color") if widget.cget("fg_color") != "transparent" else self.main_frame.cget("fg_color")
+        
+        def _fade_step(step):
+            if not widget.winfo_exists():
+                return
+                
+            alpha = max(0.0, 1.0 - step * alpha_step)
+            widget.configure(fg_color=self._adjust_color_alpha(orig_color, alpha))
+            
+            if step < steps:
+                anim_id = self.root.after(
+                    self.animation_speed, 
+                    lambda: _fade_step(step + 1))
+                self.animation_ids.append(anim_id)
+            else:
+                # Remove or hide the widget after fade out
+                widget.destroy()
+                if callback:
+                    callback()
+        
+        _fade_step(0)
+    
+    def slide_in_widget(self, widget, direction: str = 'left', duration: int = 500, callback: Optional[Callable] = None) -> None:
+        """
+        Slide in a widget from a direction.
+        
+        Args:
+            widget: The widget to animate
+            direction: Direction to slide from ('left', 'right', 'top', 'bottom')
+            duration: Animation duration in milliseconds
+            callback: Function to call when animation completes
+        """
+        # Make sure the widget exists and container is configured for packing
+        if not widget.winfo_exists():
+            if callback:
+                callback()
+            return
+        
+        # Get the parent's dimensions
+        parent = widget.master
+        parent_width = parent.winfo_width()
+        parent_height = parent.winfo_height()
+        
+        # If parent dimensions aren't available yet, try again after update
+        if parent_width <= 1 or parent_height <= 1:
+            parent.update_idletasks()
+            anim_id = self.root.after(100, lambda: self.slide_in_widget(widget, direction, duration, callback))
+            self.animation_ids.append(anim_id)
+            return
+            
+        # Position the widget initially off-screen
+        if direction == 'left':
+            widget.place(x=-widget.winfo_reqwidth(), y=0)
+            target_x, target_y = 0, 0
+        elif direction == 'right':
+            widget.place(x=parent_width, y=0)
+            target_x, target_y = parent_width - widget.winfo_reqwidth(), 0
+        elif direction == 'top':
+            widget.place(x=0, y=-widget.winfo_reqheight())
+            target_x, target_y = 0, 0
+        elif direction == 'bottom':
+            widget.place(x=0, y=parent_height)
+            target_x, target_y = 0, parent_height - widget.winfo_reqheight()
+            
+        # Now animate to target position using the slide function
+        widget.pack(fill=tk.X, pady=(30, 20))
+        
+        # Add subtle fade-in effect with the slide
+        self.fade_in_widget(widget, duration=duration)
+        
+        if callback:
+            anim_id = self.root.after(duration, callback)
+            self.animation_ids.append(anim_id)
+    
+    def slide_to_position(self, widget, target_x: float = 0.5, target_y: float = 0.5, 
+                          start_x: Optional[float] = None, start_y: Optional[float] = None,
+                          duration: int = 500, callback: Optional[Callable] = None) -> None:
+        """
+        Animate a widget sliding to a target position using relative coordinates.
+        
+        Args:
+            widget: The widget to animate
+            target_x: Target x position (relative 0-1)
+            target_y: Target y position (relative 0-1)
+            start_x: Starting x position (relative 0-1, None to use current)
+            start_y: Starting y position (relative 0-1, None to use current)
+            duration: Animation duration in milliseconds
+            callback: Function to call when animation completes
+        """
+        if not widget.winfo_exists():
+            if callback:
+                callback()
+            return
+            
+        # Use current position if start positions not specified
+        if start_x is None or start_y is None:
+            info = widget.place_info()
+            current_x = float(info.get('relx', 0.5)) if 'relx' in info else 0.5
+            current_y = float(info.get('rely', 0.5)) if 'rely' in info else 0.5
+            start_x = start_x if start_x is not None else current_x
+            start_y = start_y if start_y is not None else current_y
+        
+        # Calculate the steps
+        steps = max(1, duration // self.animation_speed)
+        x_step = (target_x - start_x) / steps
+        y_step = (target_y - start_y) / steps
+        
+        def _slide_step(step):
+            if not widget.winfo_exists():
+                return
+                
+            progress = min(1.0, step / steps)
+            
+            # Use easing function for smoother motion
+            eased_progress = self._ease_out_quad(progress)
+            
+            current_x = start_x + (target_x - start_x) * eased_progress
+            current_y = start_y + (target_y - start_y) * eased_progress
+            
+            widget.place(relx=current_x, rely=current_y, anchor=tk.CENTER)
+            
+            if step < steps:
+                anim_id = self.root.after(
+                    self.animation_speed, 
+                    lambda: _slide_step(step + 1))
+                self.animation_ids.append(anim_id)
+            elif callback:
+                callback()
+                
+        _slide_step(0)
+    
+    def pulse_widget(self, widget, color: str, duration: int = 1000, intensity: float = 0.7) -> None:
+        """
+        Create a pulsing highlight effect for a widget.
+        
+        Args:
+            widget: The widget to animate
+            color: The highlight color to pulse with
+            duration: Animation duration in milliseconds
+            intensity: Maximum intensity of the pulse (0-1)
+        """
+        if not widget.winfo_exists():
+            return
+            
+        # Save original colors
+        orig_fg = widget.cget("fg_color")
+        if orig_fg == "transparent":
+            orig_fg = self.main_frame.cget("fg_color")
+            
+        orig_border = widget.cget("border_color") if hasattr(widget, "border_color") else None
+        
+        # Number of pulse cycles
+        cycles = 2
+        steps = max(1, duration // self.animation_speed)
+        
+        def _pulse_step(step):
+            if not widget.winfo_exists():
+                return
+                
+            # Calculate pulse intensity using sine wave
+            progress = step / steps
+            angle = progress * cycles * 2 * math.pi
+            pulse_value = (math.sin(angle) + 1) / 2 * intensity
+            
+            # Apply the pulse to the widget
+            current_color = self._blend_colors(orig_fg, color, pulse_value)
+            widget.configure(fg_color=current_color)
+            
+            # Also pulse the border if it exists
+            if orig_border is not None:
+                border_color = self._blend_colors(orig_border, color, pulse_value)
+                widget.configure(border_color=border_color)
+            
+            if step < steps:
+                anim_id = self.root.after(
+                    self.animation_speed, 
+                    lambda: _pulse_step(step + 1))
+                self.animation_ids.append(anim_id)
+            else:
+                # Reset to original colors
+                widget.configure(fg_color=orig_fg)
+                if orig_border is not None:
+                    widget.configure(border_color=orig_border)
+        
+        _pulse_step(0)
+    
+    def _adjust_color_alpha(self, color, alpha: float) -> str:
+        """
+        Adjust the alpha (opacity) of a color.
+        
+        Args:
+            color: Color string in format "#RRGGBB" or tuple
+            alpha: Alpha value between 0 and 1
+            
+        Returns:
+            Color string with adjusted alpha
+        """
+        # Handle transparent color
+        if color == "transparent":
+            return color
+            
+        # Handle tuple mode colors from CustomTkinter
+        if isinstance(color, tuple):
+            if len(color) == 2:
+                # CTk tuple format (light mode color, dark mode color)
+                # Use the appropriate one based on the current appearance mode
+                mode = ctk.get_appearance_mode().lower()
+                color = color[0] if mode == "light" else color[1]
+                
+        # Try to parse hex color
+        if isinstance(color, str) and color.startswith("#"):
+            # Convert hex to RGB
+            r = int(color[1:3], 16) / 255.0
+            g = int(color[3:5], 16) / 255.0
+            b = int(color[5:7], 16) / 255.0
+            
+            # Blend with white based on alpha
+            r = r * alpha + (1 - alpha)
+            g = g * alpha + (1 - alpha)
+            b = b * alpha + (1 - alpha)
+            
+            # Convert back to hex
+            return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+        
+        # Fall back to original color if we can't parse it
+        return color
+    
+    def _blend_colors(self, color1, color2, ratio: float) -> str:
+        """
+        Blend two colors together.
+        
+        Args:
+            color1: First color string "#RRGGBB" or tuple
+            color2: Second color string "#RRGGBB" or tuple
+            ratio: Blend ratio (0 = all color1, 1 = all color2)
+            
+        Returns:
+            Blended color string
+        """
+        # Handle transparent colors
+        if color1 == "transparent":
+            color1 = self.main_frame.cget("fg_color")
+        if color2 == "transparent":
+            color2 = self.main_frame.cget("fg_color")
+            
+        # Handle tuple mode colors
+        if isinstance(color1, tuple):
+            mode = ctk.get_appearance_mode().lower()
+            color1 = color1[0] if mode == "light" else color1[1]
+        if isinstance(color2, tuple):
+            mode = ctk.get_appearance_mode().lower()
+            color2 = color2[0] if mode == "light" else color2[1]
+            
+        # Parse hex colors
+        if isinstance(color1, str) and color1.startswith("#"):
+            r1 = int(color1[1:3], 16) / 255.0
+            g1 = int(color1[3:5], 16) / 255.0
+            b1 = int(color1[5:7], 16) / 255.0
+        else:
+            r1, g1, b1 = 0.5, 0.5, 0.5  # Default gray
+            
+        if isinstance(color2, str) and color2.startswith("#"):
+            r2 = int(color2[1:3], 16) / 255.0
+            g2 = int(color2[3:5], 16) / 255.0
+            b2 = int(color2[5:7], 16) / 255.0
+        else:
+            r2, g2, b2 = 0.5, 0.5, 0.5  # Default gray
+            
+        # Blend the colors
+        r = r1 * (1 - ratio) + r2 * ratio
+        g = g1 * (1 - ratio) + g2 * ratio
+        b = b1 * (1 - ratio) + b2 * ratio
+        
+        # Return the blended color
+        return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+    
+    def _ease_out_quad(self, x: float) -> float:
+        """
+        Quadratic ease-out function for smooth animations.
+        
+        Args:
+            x: Input value between 0-1
+            
+        Returns:
+            Eased value between 0-1
+        """
+        return 1 - (1 - x) * (1 - x)
+    
     def on_window_resize(self, event) -> None:
         """
         Handle window resize events to ensure responsive layout.
@@ -228,6 +615,12 @@ class QuizApp:
         # Title with animated effect
         title_frame = ctk.CTkFrame(welcome_container, fg_color="transparent")
         title_frame.pack(fill=tk.X, pady=(30, 20))
+        
+        # Start with the title frame hidden for animation
+        title_frame.pack_forget()
+        
+        # Schedule the title frame to appear with a slide-in animation
+        self.root.after(100, lambda: self.slide_in_widget(title_frame, 'top'))
 
         title_label = ctk.CTkLabel(
             title_frame,
@@ -561,7 +954,7 @@ class QuizApp:
         back_button.pack(pady=20)
 
     def show_question_screen(self) -> None:
-        """Display the current question with options and timer with enhanced UI."""
+        """Display the current question with options and timer with enhanced UI and animations."""
         self.clear_frame()
         self.cancel_timer()
 
@@ -572,10 +965,20 @@ class QuizApp:
 
         question_container = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         question_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Start with container invisible for animation
+        question_container.pack_forget()
+        self.root.after(100, lambda: self.fade_in_widget(question_container, duration=300))
+        self.root.after(100, lambda: question_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10))
 
         # Top bar with stats
         top_bar = ctk.CTkFrame(question_container)
         top_bar.pack(fill=tk.X, pady=(5, 15))
+        
+        # Animate the top bar sliding in from left
+        top_bar.pack_forget()
+        self.root.after(200, lambda: self.slide_in_widget(top_bar, direction='left', duration=400))
+        self.root.after(200, lambda: top_bar.pack(fill=tk.X, pady=(5, 15)))
 
         # Progress indicator
         current, total = self.quiz_logic.get_progress()
@@ -619,9 +1022,14 @@ class QuizApp:
         progress_bar.pack(fill=tk.X, pady=5)
         progress_bar.set(current / total)
 
-        # Question card
+        # Question card with animation
         question_card = ctk.CTkFrame(question_container)
         question_card.pack(fill=tk.X, padx=20, pady=10, ipady=10)
+        
+        # Animate question card sliding in from right
+        question_card.pack_forget()
+        self.root.after(300, lambda: self.slide_in_widget(question_card, direction='right', duration=500))
+        self.root.after(300, lambda: question_card.pack(fill=tk.X, padx=20, pady=10, ipady=10))
 
         # Question metadata
         meta_frame = ctk.CTkFrame(question_card, fg_color="transparent")
@@ -703,6 +1111,11 @@ class QuizApp:
         # Options in a grid layout for better responsiveness
         options_frame = ctk.CTkFrame(question_container)
         options_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        # Start with options frame hidden for animated reveal
+        options_frame.pack_forget()
+        self.root.after(400, lambda: self.fade_in_widget(options_frame, duration=400))
+        self.root.after(400, lambda: options_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10))
 
         options_frame.columnconfigure(0, weight=1)
         options_frame.columnconfigure(1, weight=1)
@@ -720,6 +1133,14 @@ class QuizApp:
         for i, option in enumerate(options):
             option_frame = ctk.CTkFrame(options_frame)
             option_frame.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            
+            # Initially hide the frame for staggered animation
+            option_frame.grid_remove()
+            
+            # Schedule appearance with staggered timing based on index
+            delay = 500 + (i * 150)
+            self.root.after(delay, lambda frame=option_frame: frame.grid())
+            self.root.after(delay, lambda frame=option_frame: self.pulse_widget(frame, self.colors["primary"], duration=300, intensity=0.3))
 
             option_button = ctk.CTkButton(
                 option_frame,
@@ -743,6 +1164,11 @@ class QuizApp:
         # Submit button with accent color
         button_frame = ctk.CTkFrame(question_container, fg_color="transparent")
         button_frame.pack(pady=15)
+        
+        # Start with button frame hidden for animation
+        button_frame.pack_forget()
+        self.root.after(800, lambda: self.slide_in_widget(button_frame, direction='bottom', duration=400))
+        self.root.after(800, lambda: button_frame.pack(pady=15))
 
         self.submit_button = ctk.CTkButton(
             button_frame,
@@ -756,8 +1182,20 @@ class QuizApp:
             command=self.submit_answer
         )
         self.submit_button.pack()
+        
+        # Add subtle pulsing effect to the submit button when enabled
+        def pulse_submit_if_enabled():
+            if self.submit_button.cget("state") == "normal":
+                self.pulse_widget(self.submit_button, self.colors["highlight"], duration=1500, intensity=0.4)
+            self.root.after(2000, pulse_submit_if_enabled)
+            
+        # Start pulsing animation loop
+        self.root.after(1000, pulse_submit_if_enabled)
 
-        # Hint button (disabled if no hint available)
+        # Add a small gap between buttons for better spacing
+        ctk.CTkLabel(button_frame, text="", height=10).pack()
+        
+        # Hint button (disabled if no hint available) with animation
         hint_button = ctk.CTkButton(
             button_frame,
             text="Use Hint (−5 pts)",
@@ -890,10 +1328,19 @@ class QuizApp:
         self.timer_id = self.root.after(1000, update_timer)
 
     def cancel_timer(self) -> None:
-        """Cancel the current timer if active."""
+        """Cancel the active timer if one exists."""
         if self.timer_id:
             self.root.after_cancel(self.timer_id)
             self.timer_id = None
+            
+    def _on_close(self) -> None:
+        """Clean up resources and close the application."""
+        # Cancel any running animations and timers
+        self.cancel_animations()
+        self.cancel_timer()
+        
+        # Destroy the root window
+        self.root.destroy()
 
     def time_expired(self) -> None:
         """Handle timer expiration with visual feedback."""
@@ -937,14 +1384,19 @@ class QuizApp:
                 streak_bonus = self.current_streak
                 self.quiz_logic.score += streak_bonus
 
-                # Show streak bonus message
+                # Show streak bonus message with animation
                 streak_bonus_label = ctk.CTkLabel(
                     self.content_frame,
                     text=f"🔥 Streak Bonus: +{streak_bonus} points!",
                     font=self.get_font(16, "bold"),
                     text_color=self.colors["highlight"]
                 )
-                streak_bonus_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+                
+                # Position initially off-screen
+                streak_bonus_label.place(relx=1.5, rely=0.2, anchor=tk.CENTER)
+                
+                # Animate sliding in from right
+                self.slide_to_position(streak_bonus_label, target_x=0.5, start_x=1.5)
 
             # Track achievement for 5+ streak
             if self.current_streak >= 5 and "streak_5" not in self.achievements:
@@ -1043,7 +1495,9 @@ class QuizApp:
             fg_color=self.colors["correct"] if is_correct else self.colors["incorrect"],
             corner_radius=10
         )
-        feedback_frame.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
+        
+        # Position the frame but initially invisible
+        feedback_frame.place(relx=0.5, rely=-0.2, anchor=tk.CENTER)
 
         feedback_text = "✓ Correct!" if is_correct else "✗ Incorrect!"
         feedback_label = ctk.CTkLabel(
@@ -1053,6 +1507,20 @@ class QuizApp:
             text_color="white"
         )
         feedback_label.pack(padx=15, pady=8)
+        
+        # Animate the feedback frame sliding in from top
+        self.slide_to_position(feedback_frame, target_y=0.1, start_y=-0.2)
+        
+        # Highlight the correct option button with a pulsing effect
+        for btn, option_text in self.option_buttons:
+            if option_text == correct_answer:
+                self.pulse_widget(btn, 
+                                  color=self.colors["correct"],
+                                  duration=1000)
+            elif option_text == self.selected_option and not is_correct:
+                self.pulse_widget(btn, 
+                                  color=self.colors["incorrect"],
+                                  duration=1000)
 
         # Update buttons with improved visual feedback
         for button, option in self.option_buttons:
@@ -1083,13 +1551,24 @@ class QuizApp:
     def show_results_screen(self) -> None:
         """Display the final results screen with enhanced visual feedback and statistics."""
         self.clear_frame()
+        self.cancel_animations()
 
         results_container = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         results_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Start with container invisible for animation
+        results_container.pack_forget()
+        self.root.after(100, lambda: self.fade_in_widget(results_container, duration=400))
+        self.root.after(100, lambda: results_container.pack(fill=tk.BOTH, expand=True))
 
         # Results title with celebration emojis
         title_frame = ctk.CTkFrame(results_container, fg_color="transparent")
         title_frame.pack(fill=tk.X, pady=(20, 0))
+        
+        # Animate title with a slide-in effect
+        title_frame.pack_forget()
+        self.root.after(200, lambda: self.slide_in_widget(title_frame, direction='top', duration=500))
+        self.root.after(200, lambda: title_frame.pack(fill=tk.X, pady=(20, 0)))
 
         title_label = ctk.CTkLabel(
             title_frame,
@@ -1099,11 +1578,16 @@ class QuizApp:
         )
         title_label.pack(pady=(20, 10))
 
-        # Statistics card
+        # Statistics card with animation
         stats_frame = ctk.CTkFrame(results_container)
         stats_frame.pack(pady=20, padx=40, fill=tk.X)
+        
+        # Animate stats frame with a fade-in effect
+        stats_frame.pack_forget()
+        self.root.after(400, lambda: self.fade_in_widget(stats_frame, duration=600))
+        self.root.after(400, lambda: stats_frame.pack(pady=20, padx=40, fill=tk.X))
 
-        # Final score with large display
+        # Final score with large display and animation
         score_label = ctk.CTkLabel(
             stats_frame,
             text=f"{self.quiz_logic.score}",
@@ -1111,6 +1595,9 @@ class QuizApp:
             text_color=self.colors["highlight"]
         )
         score_label.pack(pady=(20, 5))
+        
+        # Animate the score with a pulse effect
+        self.root.after(800, lambda: self.pulse_widget(score_label, self.colors["accent"], duration=1200, intensity=0.5))
 
         score_text = ctk.CTkLabel(
             stats_frame,

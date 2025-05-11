@@ -139,6 +139,286 @@
       "correct_answer": "cos(x)",
       "difficulty": "medium",
       "category": "Calculus"
+    },
+    {
+      "question": "What is the primary function of an operating system?",
+      "options": ["Manage hardware resources", "Run applications", "Connect to the internet", "Store data"],
+      "correct_answer": "Manage hardware resources",
+      "difficulty": "easy",
+      "category": "Operating Systems"
+    },
+    {
+      "question": "Which of the following is NOT a common operating system scheduling algorithm?",
+      "options": ["Random Scheduling", "Round Robin", "First-Come-First-Served", "Shortest Job First"],
+      "correct_answer": "Random Scheduling",
+      "difficulty": "medium",
+      "category": "Operating Systems"
+    },
+    {
+      "question": "What is a deadlock in operating systems?",
+      "options": ["When two or more processes wait indefinitely for resources", "When a process uses 100% CPU", "When a program crashes", "When memory leak occurs"],
+      "correct_answer": "When two or more processes wait indefinitely for resources",
+      "difficulty": "medium",
+      "category": "Operating Systems"
+    },
+    {
+      "question": "What is virtual memory in operating systems?",
+      "options": ["Using disk space as an extension of RAM", "A type of cache memory", "The BIOS memory", "Memory used by virtual machines only"],
+      "correct_answer": "Using disk space as an extension of RAM",
+      "difficulty": "medium",
+      "category": "Operating Systems"
+    },
+    {
+      "question": "Which process scheduling algorithm is most likely to cause starvation?",
+      "options": ["Priority Scheduling", "Round Robin", "First-Come-First-Served", "Shortest Job First"],
+      "correct_answer": "Priority Scheduling",
+      "difficulty": "hard",
+      "category": "Operating Systems"
+    },
+    {
+      "question": "What is the main purpose of normalization in databases?",
+      "options": ["Minimize data redundancy", "Increase data redundancy", "Speed up queries", "Simplify database design"],
+      "correct_answer": "Minimize data redundancy",
+      "difficulty": "medium",
+      "category": "Databases"
+    },
+    {
+      "question": "Which SQL statement is used to extract data from a database?",
+      "options": ["SELECT", "EXTRACT", "GET", "OPEN"],
+      "correct_answer": "SELECT",
+      "difficulty": "easy",
+      "category": "Databases"
+    },
+    {
+      "question": "What does ACID stand for in the context of databases?",
+      "options": ["Atomicity, Consistency, Isolation, Durability", "Authentication, Confirmation, Integrity, Delivery", "Array, Collection, Index, Dimension", "Asymmetric, Crypto, Interface, Design"],
+      "correct_answer": "Atomicity, Consistency, Isolation, Durability",
+      "difficulty": "medium",
+      "category": "Databases"
+    },
+    {
+      "question": "Which of the following is NOT a type of database join?",
+      "options": ["Diagonal Join", "Inner Join", "Left Join", "Full Outer Join"],
+      "correct_answer": "Diagonal Join",
+      "difficulty": "medium",
+      "category": "Databases"
+    },
+    {
+      "question": "Which normal form deals with removing transitive dependencies?",
+      "options": ["Third Normal Form (3NF)", "First Normal Form (1NF)", "Second Normal Form (2NF)", "Boyce-Codd Normal Form (BCNF)"],
+      "correct_answer": "Third Normal Form (3NF)",
+      "difficulty": "hard",
+      "category": "Databases"
+    },
+    {
+      "question": "Which layer of the OSI model is responsible for routing?",
+      "options": ["Network Layer", "Transport Layer", "Data Link Layer", "Session Layer"],
+      "correct_answer": "Network Layer",
+      "difficulty": "medium",
+      "category": "Networking"
+    },
+    {
+      "question": "What does HTTP stand for?",
+      "options": ["Hypertext Transfer Protocol", "High Tech Transfer Protocol", "Hypertext Transit Process", "Hyperlink Text Protocol"],
+      "correct_answer": "Hypertext Transfer Protocol",
+      "difficulty": "easy",
+      "category": "Networking"
+    },
+    {
+      "question": "Which protocol is used for secure web browsing?",
+      "options": ["HTTPS", "FTP", "SMTP", "Telnet"],
+      "correct_answer": "HTTPS",
+      "difficulty": "easy",
+      "category": "Networking"
+    },
+    {
+      "question": "What is the purpose of DNS in networking?",
+      "options": ["Translate domain names to IP addresses", "Encrypt data packets", "Route data packets", "Filter network traffic"],
+      "correct_answer": "Translate domain names to IP addresses",
+      "difficulty": "easy",
+      "category": "Networking"
+    },
+    {
+      "question": "Which of the following is NOT a valid IPv4 address?",
+      "options": ["300.168.1.1", "192.168.1.1", "10.0.0.1", "172.16.254.1"],
+      "correct_answer": "300.168.1.1",
+      "difficulty": "medium",
+      "category": "Networking"
+    },
+    {
+      "question": "What is polymorphism in object-oriented programming?",
+      "options": ["Ability of objects to take many forms", "Hiding implementation details", "Creating multiple objects", "Inheriting from multiple classes"],
+      "correct_answer": "Ability of objects to take many forms",
+      "difficulty": "medium",
+      "category": "Object-Oriented Programming"
+    },
+    {
+      "question": "What is encapsulation in OOP?",
+      "options": ["Bundling data and methods that operate on that data", "Creating subclasses", "Method overriding", "Creating multiple instances"],
+      "correct_answer": "Bundling data and methods that operate on that data",
+      "difficulty": "medium",
+      "category": "Object-Oriented Programming"
+    },
+    {
+      "question": "What does the 'protected' access modifier do in Java?",
+      "options": ["Allows access within the same package and subclasses", "Restricts access to the same class only", "Allows access from any class", "Allows access within the same package only"],
+      "correct_answer": "Allows access within the same package and subclasses",
+      "difficulty": "hard",
+      "category": "Object-Oriented Programming"
+    },
+    {
+      "question": "Which design pattern is used to create objects without specifying their concrete classes?",
+      "options": ["Factory Pattern", "Singleton Pattern", "Observer Pattern", "Decorator Pattern"],
+      "correct_answer": "Factory Pattern",
+      "difficulty": "hard",
+      "category": "Object-Oriented Programming"
+    },
+    {
+      "question": "What is method overriding in OOP?",
+      "options": ["Providing a new implementation for an inherited method", "Creating multiple methods with the same name but different parameters", "Hiding class variables", "Creating static methods"],
+      "correct_answer": "Providing a new implementation for an inherited method",
+      "difficulty": "medium",
+      "category": "Object-Oriented Programming"
+    },
+    {
+      "question": "What is the time complexity of searching in a balanced binary search tree?",
+      "options": ["O(log n)", "O(n)", "O(n²)", "O(1)"],
+      "correct_answer": "O(log n)",
+      "difficulty": "medium",
+      "category": "Algorithms"
+    },
+    {
+      "question": "Which sorting algorithm has the best average-case time complexity?",
+      "options": ["Merge Sort", "Bubble Sort", "Selection Sort", "Insertion Sort"],
+      "correct_answer": "Merge Sort",
+      "difficulty": "medium",
+      "category": "Algorithms"
+    },
+    {
+      "question": "What is a greedy algorithm?",
+      "options": ["An algorithm that makes locally optimal choices at each stage", "An algorithm that uses exhaustive search", "An algorithm that uses dynamic programming", "An algorithm that always runs in O(n) time"],
+      "correct_answer": "An algorithm that makes locally optimal choices at each stage",
+      "difficulty": "medium",
+      "category": "Algorithms"
+    },
+    {
+      "question": "Which of the following problems is NP-complete?",
+      "options": ["Traveling Salesman Problem", "Binary Search", "Merge Sort", "Finding the maximum element in an array"],
+      "correct_answer": "Traveling Salesman Problem",
+      "difficulty": "hard",
+      "category": "Algorithms"
+    },
+    {
+      "question": "What data structure would you use for implementing breadth-first search?",
+      "options": ["Queue", "Stack", "Heap", "Hash Table"],
+      "correct_answer": "Queue",
+      "difficulty": "medium",
+      "category": "Algorithms"
+    },
+    {
+      "question": "What is the purpose of a version control system like Git?",
+      "options": ["Track changes to code over time", "Compile code into executables", "Debug applications", "Deploy applications to production"],
+      "correct_answer": "Track changes to code over time",
+      "difficulty": "easy",
+      "category": "Software Development"
+    },
+    {
+      "question": "What is continuous integration?",
+      "options": ["Automatically building and testing code when changes are made", "Continuously writing code without breaks", "Integrating multiple programming languages in one project", "Integrating multiple databases with an application"],
+      "correct_answer": "Automatically building and testing code when changes are made",
+      "difficulty": "medium",
+      "category": "Software Development"
+    },
+    {
+      "question": "Which of the following is NOT a software development methodology?",
+      "options": ["Recursive Development", "Agile", "Waterfall", "Scrum"],
+      "correct_answer": "Recursive Development",
+      "difficulty": "medium",
+      "category": "Software Development"
+    },
+    {
+      "question": "What is technical debt?",
+      "options": ["The implied cost of additional rework caused by choosing an easy solution now", "Money spent on technical equipment", "The cost of hiring technical experts", "Annual budget for IT infrastructure"],
+      "correct_answer": "The implied cost of additional rework caused by choosing an easy solution now",
+      "difficulty": "medium",
+      "category": "Software Development"
+    },
+    {
+      "question": "What is the purpose of a code review?",
+      "options": ["Identify bugs and improve code quality", "Count lines of code", "Document the codebase", "Optimize compilation time"],
+      "correct_answer": "Identify bugs and improve code quality",
+      "difficulty": "easy",
+      "category": "Software Development"
+    },
+    {
+      "question": "Which of the following is a relational database management system?",
+      "options": ["PostgreSQL", "MongoDB", "Redis", "Cassandra"],
+      "correct_answer": "PostgreSQL",
+      "difficulty": "easy",
+      "category": "Databases"
+    },
+    {
+      "question": "What does REST stand for in the context of API development?",
+      "options": ["Representational State Transfer", "Remote Execution Service Technology", "Request-Execute-Service-Transmit", "Response Evaluation System Tool"],
+      "correct_answer": "Representational State Transfer",
+      "difficulty": "medium",
+      "category": "Web Development"
+    },
+    {
+      "question": "What is the purpose of CSS in web development?",
+      "options": ["Define the styling and layout of web pages", "Process data on the server", "Create interactive features", "Store data in the browser"],
+      "correct_answer": "Define the styling and layout of web pages",
+      "difficulty": "easy",
+      "category": "Web Development"
+    },
+    {
+      "question": "Which JavaScript framework was developed by Facebook?",
+      "options": ["React", "Angular", "Vue", "Ember"],
+      "correct_answer": "React",
+      "difficulty": "easy",
+      "category": "Web Development"
+    },
+    {
+      "question": "What is a closure in JavaScript?",
+      "options": ["A function that can access variables from its outer scope", "A way to close browser tabs", "A method to terminate functions", "A security feature that blocks code execution"],
+      "correct_answer": "A function that can access variables from its outer scope",
+      "difficulty": "hard",
+      "category": "Web Development"
+    },
+    {
+      "question": "What does JWT stand for in authentication?",
+      "options": ["JSON Web Token", "Java Web Toolkit", "JavaScript Worker Thread", "Joint Web Technology"],
+      "correct_answer": "JSON Web Token",
+      "difficulty": "medium",
+      "category": "Web Development"
+    },
+    {
+      "question": "What is the time complexity of inserting an element at the end of an array?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+      "correct_answer": "O(1)",
+      "difficulty": "easy",
+      "category": "Data Structures"
+    },
+    {
+      "question": "What is recursion in programming?",
+      "options": ["When a function calls itself", "When two functions call each other", "A loop that runs infinitely", "A pattern matching technique"],
+      "correct_answer": "When a function calls itself",
+      "difficulty": "easy",
+      "category": "Programming Basics"
+    },
+    {
+      "question": "Which data structure is used to implement a FIFO (First In, First Out) behavior?",
+      "options": ["Queue", "Stack", "Tree", "Hash Table"],
+      "correct_answer": "Queue", 
+      "difficulty": "easy",
+      "category": "Data Structures"
+    },
+    {
+      "question": "What is a hash collision?",
+      "options": ["When two different keys hash to the same value", "When a hash function returns an error", "When a hash table is full", "When a key cannot be hashed"],
+      "correct_answer": "When two different keys hash to the same value",
+      "difficulty": "medium",
+      "category": "Data Structures"
     }
   ]
 }
