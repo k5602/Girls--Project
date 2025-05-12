@@ -50,7 +50,7 @@ QuizMaster/
 2. Install the required dependencies:
 
 ```bash
-pip install customtkinter pillow
+pip install tk customtkinter pillow
 ```
 
 3. Run the application:
