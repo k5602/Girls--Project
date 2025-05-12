@@ -901,6 +901,18 @@ class QuizApp:
 
         # Reset streak
         self.current_streak = 0
+        
+        # Since time expired, mark question as incorrect (skipped)
+        self.quiz_logic.skipped_questions += 1
+        
+        # Get current question for recording time data
+        question = self.quiz_logic.get_current_question()
+        if question:
+            # Record the answer time for statistics
+            question["answer_time"] = time.time()
+            time_taken = question["answer_time"] - question.get("start_time", question["answer_time"])
+            self.quiz_logic.question_times.append(time_taken)
+            question["points_awarded"] = 0  # No points for expired timer
 
         # Show "Time's Up!" message
         for widget in self.content_frame.winfo_children():
@@ -914,10 +926,8 @@ class QuizApp:
                 time_up_label.pack(pady=10)
                 break
 
-        # Show correct answer
-        self.show_correct_answer()
+        self.show_correct_answer(False)
 
-        # Wait 2 seconds before moving to next question
         self.root.after(2000, self.move_to_next_question)
 
     def submit_answer(self) -> None:
@@ -927,17 +937,14 @@ class QuizApp:
         is_correct = self.quiz_logic.check_answer(self.selected_option)
         self.show_correct_answer(is_correct)
 
-        # Update streak
         if is_correct:
             self.current_streak += 1
             self.longest_streak = max(self.longest_streak, self.current_streak)
 
-            # Add bonus points for streaks
             if self.current_streak >= 3:
                 streak_bonus = self.current_streak
                 self.quiz_logic.score += streak_bonus
 
-                # Show streak bonus message
                 streak_bonus_label = ctk.CTkLabel(
                     self.content_frame,
                     text=f"🔥 Streak Bonus: +{streak_bonus} points!",
@@ -946,14 +953,12 @@ class QuizApp:
                 )
                 streak_bonus_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
-            # Track achievement for 5+ streak
             if self.current_streak >= 5 and "streak_5" not in self.achievements:
                 self.achievements["streak_5"] = True
                 self.show_achievement("Hot Streak", "Answered 5 questions correctly in a row")
         else:
             self.current_streak = 0
 
-        # Track perfect score achievement
         current, total = self.quiz_logic.get_progress()
         if current == total and is_correct:
             difficulty = self.quiz_logic.difficulty
@@ -964,7 +969,6 @@ class QuizApp:
                     f"Answered all {difficulty} questions correctly"
                 )
 
-        # Wait 2 seconds before moving to next question
         self.root.after(2000, self.move_to_next_question)
 
     def show_achievement(self, title: str, description: str) -> None:
@@ -1070,6 +1074,16 @@ class QuizApp:
                 )  # Wrong answer
             else:
                 button.configure(state="disabled", fg_color="#555555")  # Disable other options
+
+        # Add a feedback message when time expired (no option selected)
+        if is_correct is False and not self.selected_option:
+            time_expired_label = ctk.CTkLabel(
+                self.content_frame,
+                text="No answer selected!",
+                font=self.get_font(16),
+                text_color=self.colors["incorrect"]
+            )
+            time_expired_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
         self.submit_button.configure(state="disabled")
 
@@ -1372,10 +1386,9 @@ class QuizApp:
             )
             no_scores_label.grid(row=0, column=0, columnspan=3, pady=30)
         else:
-            for i, (name, score) in enumerate(top_scores, 1):
-                # Use different background for alternating rows and highlight top 3
+            for i, entry in enumerate(top_scores, 1):
+                name, score = entry[0], entry[1]  
                 if i <= 3:
-                    # Gold, Silver, Bronze for top 3
                     bg_colors = {1: "#FFD700", 2: "#C0C0C0", 3: "#CD7F32"}
                     row_color = bg_colors.get(i)
                     text_color = "black"
@@ -1384,11 +1397,9 @@ class QuizApp:
                     row_color = self.colors["secondary"] if i % 2 == 0 else None
                     text_color = None
 
-                # Create row frame
                 score_row = ctk.CTkFrame(scores_list_frame, fg_color=row_color, corner_radius=5)
                 score_row.grid(row=i-1, column=0, columnspan=3, sticky="ew", pady=3, padx=5)
 
-                # Configure row columns
                 score_row.columnconfigure(0, weight=1)
                 score_row.columnconfigure(1, weight=3)
                 score_row.columnconfigure(2, weight=1)

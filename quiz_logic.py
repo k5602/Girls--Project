@@ -273,13 +273,26 @@ class QuizLogic:
             True if there is a next question, False otherwise
         """
         self.current_question_index += 1
+        
+        # Calculate total questions answered so far
+        total_answered = self.answered_correctly + self.answered_incorrectly + self.skipped_questions
+        
+        # Check if we've reached the user-defined questions limit
+        if total_answered >= self.questions_per_game:
+            # If we've reached the user-defined limit, don't add more questions
+            return False
 
         # Check if we've reached the end of the current batch
         if self.current_question_index >= len(self.current_questions):
             # If we have more questions available, load the next batch
             if self._remaining_questions:
-                # Load up to 5 more questions (pagination)
-                batch_size = min(5, len(self._remaining_questions))
+                # Calculate how many more questions we can add without exceeding the limit
+                questions_remaining = self.questions_per_game - total_answered
+                if questions_remaining <= 0:
+                    return False
+                    
+                # Load up to 5 more questions (pagination), but not exceeding user limit
+                batch_size = min(5, len(self._remaining_questions), questions_remaining)
                 next_batch = self._remaining_questions[:batch_size]
                 self._remaining_questions = self._remaining_questions[batch_size:]
 
